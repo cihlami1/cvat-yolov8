@@ -51,7 +51,7 @@ We want to avoid using [Roboflow](https://roboflow.com/) because the datasets ar
 > **&#9432; NOTE:** At first you can annotate smaller number of images, i.e. 500 images, with even distribution of all labels, **including the new ones**, and train the model on this dataset. It is not enough to get perfect model, but you can use it to predict the rest of your images and then just correct or add the labels - it will speed up the annotation process.
 
 ## 4. Add custom YOLO v8 based model to CVAT
-  * We prepared files for YOLO v8 deployment to CVAT, and based on them, you can create your custom model and add it to the annotator
+  * We prepared files for YOLO v8 deployment to CVAT in `deploy_yolov8`, and based on them, you can create your custom model and add it to the annotator
   * First thing you need to do is to create `funcion.yaml` and `function-gpu.yaml` (for GPU support) files
   * The description of the parameters can be found in [docs](https://opencv.github.io/cvat/docs/manual/advanced/serverless-tutorial/#dl-model-as-a-serverless-function)
   * Make sure you renamed the model's name and also name of the docker image and container
@@ -79,3 +79,17 @@ We want to avoid using [Roboflow](https://roboflow.com/) because the datasets ar
       ```
       
   * Now we can deploy your model on our server - if you send it to us (we are not prophets)
+
+## ROS 1 node for online detection
+We created ROS 1 node that can run online detection with YOLOv8 based models on data from `sensor_msgs/Image` message
+* Tested for ROS Noetic on Ubuntu 20.04 LTS.
+* The node subscribes to topic `/sensor_stack/cameras/stereo_front/zed_node/left_raw/image_raw_color`. You can change that by adding following line to the launch file.
+  ```xml
+  <remap from="/sensor_stack/cameras/stereo_front/zed_node/left_raw/image_raw_color" to="<your-topic>"/>
+  ```
+* It publishes to topic named `/detector`
+* To deploy your custom model:
+  1. Create config `.yaml` file with definition of all possible labels (see prepared `.yaml` files in `detector/config` for reference) 
+  2. Put your model to the `detector/model` directory 
+  3. Then create `.launch` file in `detector/launch` directory (you can copy e.g `yolov8.launch`) and change the value of `yolo_model` and `model_config` accordingly
+  4. Run `roslaunch detector <your-launch-file>`

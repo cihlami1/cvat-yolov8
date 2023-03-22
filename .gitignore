@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # pytorch model
-*.pt
+yolov8*.pt
 *.onnx
 
 # C extensions
