@@ -98,14 +98,15 @@ class Detector:
         mid = time.time() - start
         # print(mid)
 
-        yolo_results = self.model.predict(source=cv_image[:, :, ::-1])
+        yolo_results = self.model.predict(source=cv_image[:, :, ::-1], stream=True)
 
-        cv_image_box = plot_bboxes(cv_image, yolo_results[0].boxes.boxes, labels=self.model_config['labels'], conf=0.5)
-        mid = time.time() - mid
-        # print(mid)
-        cv_image_box = self.cv_bridge.cv2_to_imgmsg(cv_image_box, encoding="bgr8")
-        # print(time.time() - mid)
-        self.bounding_box_publisher.publish(cv_image_box)
+        for result in yolo_results:
+            cv_image_box = plot_bboxes(cv_image, result.boxes.boxes, labels=self.model_config['labels'], conf=0.5)
+            mid = time.time() - mid
+            # print(mid)
+            cv_image_box = self.cv_bridge.cv2_to_imgmsg(cv_image_box, encoding="bgr8")
+            # print(time.time() - mid)
+            self.bounding_box_publisher.publish(cv_image_box)
 
 
 if __name__ == '__main__':
