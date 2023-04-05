@@ -2,6 +2,7 @@
 
 import rospy
 from sensor_msgs.msg import Image
+from std_msgs.msg import Float64MultiArray, MultiArrayDimension
 from cv_bridge import CvBridge, CvBridgeError
 from ultralytics import YOLO
 import numpy as np
@@ -81,12 +82,17 @@ class Detector:
         # print(self.model_config)
         self.model = YOLO(model_name)
 
-        rospy.Subscriber('/sensor_stack/cameras/stereo_front/zed_node/left_raw/image_raw_color', Image,
+        rospy.Subscriber('/sensor_stack/cameras/stereo_front/zed_node/left/image_rect_color', Image,
                          self.get_image_cb)
 
-        self.bounding_box_publisher = rospy.Publisher(
-            '/detector',
+        self.image_publisher = rospy.Publisher(
+            '/detector_image',
             Image, queue_size=10)
+
+        self.labels_publisher = rospy.Publisher(
+            '/detector_classes',
+            Float64MultiArray, queue_size=10
+        )
 
     def get_image_cb(self, msg):
         start = time.time()
@@ -101,12 +107,35 @@ class Detector:
         yolo_results = self.model.predict(source=cv_image[:, :, ::-1], stream=True)
 
         for result in yolo_results:
+            # print(result.boxes.boxes)
+            my_msg = Float64MultiArray() 
+            d = result.boxes.boxes.tolist()
+            my_msg.layout.dim.append(MultiArrayDimension())
+            my_msg.layout.dim.append(MultiArrayDimension())
+
+            width = 6
+            height = len(d)
+            my_msg.layout.dim[0].size = height
+            my_msg.layout.dim[1].size = width
+            my_msg.layout.dim[0].label = "height"
+            my_msg.layout.dim[1].label = "width"
+            my_msg.layout.dim[0].size = height
+            my_msg.layout.dim[1].size = width
+            my_msg.layout.dim[0].stride = width*height
+            my_msg.layout.dim[1].stride = width
+            my_msg.layout.data_offset = 0
+
+            # d = [[float(d[i][j]) for j in range(len(d[0]))] for i in range(len(d))]
+            # print([[0] * 6] * len(d))
+            my_msg.data = [item for sublist in d for item in sublist]
+
             cv_image_box = plot_bboxes(cv_image, result.boxes.boxes, labels=self.model_config['labels'], conf=0.5)
             mid = time.time() - mid
             # print(mid)
             cv_image_box = self.cv_bridge.cv2_to_imgmsg(cv_image_box, encoding="bgr8")
             # print(time.time() - mid)
-            self.bounding_box_publisher.publish(cv_image_box)
+            self.image_publisher.publish(cv_image_box)
+            self.labels_publisher.publish(my_msg)
 
 
 if __name__ == '__main__':
