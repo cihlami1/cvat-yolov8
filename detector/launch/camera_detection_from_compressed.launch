@@ -1,0 +1,7 @@
+<launch>
+
+	<node pkg="image_transport" type="republish" name="rgb_compress" args="compressed in:=/sensor_stack/cameras/stereo_front/zed_node/left/image_rect_color raw out:=/sensor_stack/cameras/stereo_front/zed_node/left/image_rect_color"/>
+
+	<include file="$(find detector)/launch/speed_bumps_pre.launch"/>
+
+</launch>

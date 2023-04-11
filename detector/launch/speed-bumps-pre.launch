@@ -1,0 +1,8 @@
+<launch>
+
+    <node pkg="detector" type="main.py" name="YOLOv8_Detector" output="screen" required="true">
+        <param name="yolo_model" type="string" value="$(find detector)/model/speed-bumps-pre.pt" />
+        <param name="model_config" type="string" value="$(find detector)/config/speed-bumps.yaml" />
+    </node>
+
+</launch>
