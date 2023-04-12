@@ -109,12 +109,12 @@ class Detector:
         for result in yolo_results:
             # print(result.boxes.boxes)
             my_msg = Float64MultiArray() 
-            d = result.boxes.boxes.tolist()
+            d = result.boxes.boxes.cpu().numpy()
             my_msg.layout.dim.append(MultiArrayDimension())
             my_msg.layout.dim.append(MultiArrayDimension())
 
             width = 6
-            height = len(d)
+            height = d.shape[0]
             my_msg.layout.dim[0].size = height
             my_msg.layout.dim[1].size = width
             my_msg.layout.dim[0].label = "height"
@@ -127,15 +127,18 @@ class Detector:
 
             # d = [[float(d[i][j]) for j in range(len(d[0]))] for i in range(len(d))]
             # print([[0] * 6] * len(d))
-            my_msg.data = [item for sublist in d for item in sublist]
+            my_msg.data = d.flatten().tolist()
+            self.labels_publisher.publish(my_msg)
+            # my_msg.data = [item for sublist in d for item in sublist]
 
-            cv_image_box = plot_bboxes(cv_image, result.boxes.boxes, labels=self.model_config['labels'], conf=0.5)
+            cv_image_box = plot_bboxes(cv_image, result.boxes.boxes,
+                                       labels=self.model_config['labels'],
+                                       conf=self.model_config['conf'])
             mid = time.time() - mid
             # print(mid)
             cv_image_box = self.cv_bridge.cv2_to_imgmsg(cv_image_box, encoding="bgr8")
             # print(time.time() - mid)
             self.image_publisher.publish(cv_image_box)
-            self.labels_publisher.publish(my_msg)
 
 
 if __name__ == '__main__':

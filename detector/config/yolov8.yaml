@@ -79,3 +79,5 @@ labels:
   77: teddy bear
   78: hair drier
   79: toothbrush
+
+conf: 0.5   # lower limit of prediction

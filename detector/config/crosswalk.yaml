@@ -11,3 +11,5 @@ labels:
   9: bench
   10: sheep
   11: crosswalk
+
+conf: 0.3   # lower bound to publish prediction
